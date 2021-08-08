@@ -4,7 +4,6 @@ import Navbar from 'react-bootstrap/Navbar';
 import { Link } from "react-router-dom";
 import '../css/Header.css';
 import { House, Heart } from 'bootstrap-icons-react';
-import Login from './Login'
 
 
 
