@@ -4,7 +4,7 @@ class BestBooks extends React.Component {
     render() {
         return (
             <>
-                <h2 className=" bg-dark text-white text-center">Best Books</h2>
+                <h2 className=" bg-dark text-white text-center">Welcome to 'Best Books' library</h2>
             </>
         )
     }
