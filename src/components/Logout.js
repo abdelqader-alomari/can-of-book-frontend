@@ -9,15 +9,7 @@ function Logout() {
     } = useAuth0();
 
     return isAuthenticated && (
-        <Card style={{ width: '18rem', textAlign: 'center', background: "#111", color: "white", marginLeft: "0%", marginTop: "25%" }}>
-            <Card.Body>
-                <Card.Title>Logout</Card.Title>
-                <Card.Text>
-                    Click Below to Logout
-                </Card.Text>
-                <LogoutButton />
-            </Card.Body>
-        </Card>
+        <div style={{ position: 'absolute', left: '93%', top: '5%' }}><LogoutButton /></div>
     );
 }
 
