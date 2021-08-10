@@ -1,0 +1,16 @@
+body {
+  background-image: url(../Library.jpg);
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+a {
+  color: #fff;
+  position: relative;
+  left: 60%;
+  padding-left: 5%;
+}
+
+a:hover {
+  color: darkgrey;
+}
