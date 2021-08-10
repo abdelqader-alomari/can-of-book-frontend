@@ -1,7 +1,8 @@
 import React from 'react'
-
+import { withAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
 import { Carousel } from 'react-bootstrap'
+require('dotenv').config();
 
 export class BestBooks extends React.Component {
 
@@ -9,11 +10,13 @@ export class BestBooks extends React.Component {
         super(props)
         this.state = {
             numberOfBooks: 0,
-            BooksData: ''
+            BooksData: '',
         }
     }
     componentDidMount = () => {
-        axios.get(`http://localhost:3011/books?email=aboud.coding@gmail.com`).then((booksData) => {
+        const { user } = this.props.auth0;
+
+        axios.get(`${process.env.REACT_APP_PORT}/books?email=${user.email}`).then((booksData) => {
             console.log(booksData);
             this.setState({
                 numberOfBooks: booksData.data[0].books.length,
@@ -49,4 +52,4 @@ export class BestBooks extends React.Component {
     }
 }
 
-export default BestBooks
+export default withAuth0(BestBooks);
