@@ -42,5 +42,4 @@ class FormModal extends React.Component {
         )
     }
 }
-
 export default FormModal

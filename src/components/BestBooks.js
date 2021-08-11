@@ -3,15 +3,15 @@ import { withAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
 import { Carousel, Button } from 'react-bootstrap'
 import FormModal from './FormModal';
-
 export class BestBooks extends React.Component {
 
     constructor(props) {
         super(props)
         this.state = {
             numberOfBooks: 0,
-            BooksData: [],
-            displayAddModal: false
+            booksData: [],
+            displayAddModal: false,
+            showBooksComponent: false
         }
     }
     componentDidMount = () => {
@@ -20,8 +20,9 @@ export class BestBooks extends React.Component {
         axios.get(`${process.env.REACT_APP_PORT}/books?email=${user.email}`).then((booksData) => {
             console.log(booksData);
             this.setState({
+                showBooksComponent: true,
                 numberOfBooks: booksData.data[0].books.length,
-                BooksData: booksData.data[0].books
+                booksData: booksData.data[0].books
             })
         })
     }
@@ -33,9 +34,6 @@ export class BestBooks extends React.Component {
 
         e.preventDefault();
         this.handleDisplayModal(); // hide the modal after form submission
-        // console.log('name: ', e.target.catName.value);
-        // console.log('breed: ', e.target.catBreed.value);
-        // console.log('Image: ', e.target.catImage.value);
 
         const body = {
             email: this.props.auth0.user.email, // we are getting the email of the user from auth0
@@ -45,26 +43,24 @@ export class BestBooks extends React.Component {
             img_url: e.target.img_url.value,
         };
 
-        axios.post(`${process.env.REACT_APP_PORT}/book`, body).then(booksData => {
-
-            this.state.booksData.push(booksData.data);
+        axios.post(`${process.env.REACT_APP_PORT}/addBook`, body).then(booksData => {
             this.setState({
-                booksData: this.state.booksData
+                booksData: booksData.data
             });
         }).catch(error => alert(error));
     }
-    handleDeleteBook = (bookId) => {
-        axios.delete(`${process.env.REACT_APP_PORT}/book/${bookId}`).then(res => {
+    handleDeleteBook = (index) => {
+        const { user } = this.props.auth0;
+        const data = {
+            email: user.email,
+        }
+        axios.delete(`${process.env.REACT_APP_PORT}/book/${index}`, { params: data }).then(result => {
 
-            if (res.data.ok === 1) {
-                const tempBookObj = this.state.booksData.filter(book => book._id !== bookId);
-                this.setState({
-                    booksData: tempBookObj
-                });
-            }
+            this.setState({
+                booksData: result.data
+            });
         }).catch(error => alert(error))
     }
-
 
     render() {
         return (
@@ -76,12 +72,10 @@ export class BestBooks extends React.Component {
                         handleDisplayModal={this.handleDisplayModal}
                         handleSubmitForm={this.handleAddBookForm}
                     />
-
                     < Carousel >
 
                         {this.state.numberOfBooks > 0 &&
-                            this.state.BooksData.map(value =>
-
+                            this.state.booksData.map((value, i) =>
                                 <Carousel.Item>
                                     <img
                                         className="d-block w-30"
@@ -89,16 +83,19 @@ export class BestBooks extends React.Component {
                                         src={value.img_url}
                                         alt="Book"
                                     />
-                                    <Carousel.Caption  >
+                                    <Carousel.Caption >
                                         <h3 style={{ fontSize: '18px', backgroundColor: "#333", width: "34%", textAlign: 'center', marginLeft: "34%" }}>{value.title}</h3>
                                         <p style={{ fontSize: '12px', backgroundColor: "#333", width: "34%", textAlign: 'center', marginLeft: "34%" }}>{value.description}</p>
                                         <p style={{ fontSize: '12px', backgroundColor: "#333", width: "20%", textAlign: 'center', marginLeft: "34%" }}>{value.status}</p>
+                                        <div key={i}>
+                                            <button onClick={() => this.handleDeleteBook(i)}>Delete</button>
+                                        </div>
                                     </Carousel.Caption>
                                 </Carousel.Item>
                             )}
                     </Carousel >
                 </>
-            </div>
+            </div >
         )
     }
 }
