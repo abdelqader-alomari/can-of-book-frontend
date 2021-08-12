@@ -54,7 +54,7 @@ export class BestBooks extends React.Component {
         const data = {
             email: user.email,
         }
-        axios.delete(`${process.env.REACT_APP_PORT}/book/${index}`, { params: data }).then(result => {
+        axios.delete(`${process.env.REACT_APP_PORT}/deleteBook/${index}`, { params: data }).then(result => {
 
             this.setState({
                 booksData: result.data
