@@ -1,7 +1,9 @@
 import React from 'react'
 import { Modal, Button, Form } from 'react-bootstrap';
+import { withAuth0 } from "@auth0/auth0-react";
 
-class FormModal extends React.Component {
+
+class BookFormModal extends React.Component {
     render() {
         return (
             <div>
@@ -10,7 +12,7 @@ class FormModal extends React.Component {
                         <Modal.Title>Add Book Form</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <Form onSubmit={(e) => this.props.handleSubmitForm(e)}>
+                        <Form onSubmit={(e) => this.props.addBook(e)}>
                             <Form.Group className="mb-3" controlId="formBasicEmail">
                                 <Form.Label>Book Title</Form.Label>
                                 <Form.Control name="title" type="text" placeholder="Enter the book title" />
@@ -42,4 +44,4 @@ class FormModal extends React.Component {
         )
     }
 }
-export default FormModal
+export default withAuth0(BookFormModal)

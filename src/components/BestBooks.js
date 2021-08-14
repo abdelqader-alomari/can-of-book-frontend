@@ -1,102 +1,167 @@
-import React from 'react'
-import { withAuth0 } from '@auth0/auth0-react';
+import React from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
-import { Carousel, Button } from 'react-bootstrap'
-import FormModal from './FormModal';
-export class BestBooks extends React.Component {
+import { withAuth0 } from '@auth0/auth0-react';
+import Carousel from 'react-bootstrap/Carousel';
+import BookFormModal from './BookFormModal'
+import Button from 'react-bootstrap/Button';
+import UpdatedBook from './UpdateBook';
 
+
+
+
+class BestBooks extends React.Component {
     constructor(props) {
-        super(props)
+        super(props);
         this.state = {
-            numberOfBooks: 0,
-            booksData: [],
+            ownerEmail: this.props.auth0.user.email,
+            books: [],
             displayAddModal: false,
-            showBooksComponent: false
-        }
+            showUpdateModal: false,
+            updateBookObj: {}
+        };
     }
-    componentDidMount = () => {
-        const { user } = this.props.auth0;
 
-        axios.get(`${process.env.REACT_APP_PORT}/books?email=${user.email}`).then((booksData) => {
-            console.log(booksData);
+    componentDidMount() {
+        this.fetchBooks();
+    }
+
+    handelDisplayModal = () => {
+        this.setState({ displayAddModal: true });
+    }
+
+    handelUpdatedModal = (item) => {
+        this.setState({ showUpdateModal: true, updateBookObj: item });
+    }
+
+
+    fetchBooks = async () => {
+        await axios.get(
+            `http://localhost:3011/books?email=${this.state.ownerEmail}`
+        ).then(axiosResponse => {
             this.setState({
-                showBooksComponent: true,
-                numberOfBooks: booksData.data[0].books.length,
-                booksData: booksData.data[0].books
-            })
-        })
-    }
-    handleDisplayModal = () => {
-        this.setState({ displayAddModal: !this.state.displayAddModal });
-    }
+                books: axiosResponse.data
+            });
+        }).catch(error => alert(error));
+    };
 
-    handleAddBookForm = (e) => {
-
+    addBook = (e) => {
         e.preventDefault();
-        this.handleDisplayModal(); // hide the modal after form submission
 
         const body = {
-            email: this.props.auth0.user.email, // we are getting the email of the user from auth0
+            ownerEmail: this.props.auth0.user.email, // we are getting the email of the user from auth0
             title: e.target.title.value,
             description: e.target.description.value,
             status: e.target.status.value,
             img_url: e.target.img_url.value,
         };
 
-        axios.post(`${process.env.REACT_APP_PORT}/addBook`, body).then(booksData => {
+        axios.post(`http://localhost:3011/book`, body).then(axiosResponse => {
+            // console.log(axiosResponse.data);
+            this.state.books.push(axiosResponse.data);
             this.setState({
-                booksData: booksData.data
+                books: this.state.books
+
             });
+            console.log(this.state.books);
+
+        }).catch(error => alert(error));
+        this.setState({ displayAddModal: false });
+    }
+
+
+    deleteBook = (index) => {
+        axios.delete(
+            `http://localhost:3011/book/${index}`
+        ).then(axiosResponse => {
+            if (axiosResponse) {
+                const deletedBook = this.state.books.filter(book => book._id !== index);
+                this.setState({
+                    books: deletedBook
+                });
+            }
         }).catch(error => alert(error));
     }
-    handleDeleteBook = (index) => {
-        const { user } = this.props.auth0;
-        const data = {
-            email: user.email,
-        }
-        axios.delete(`${process.env.REACT_APP_PORT}/book/${index}`, { params: data }).then(result => {
 
-            this.setState({
-                booksData: result.data
+    UpdateBook = ((e) => {
+        e.preventDefault();
+        const bookId = this.state.updateBookObj._id;
+        const body = {
+            title: e.target.title.value,
+            description: e.target.description.value,
+            status: e.target.status.value,
+            img_url: e.target.img_url.value,
+        };
+
+        axios.put(`http://localhost:3011/book/${bookId}`, body).then((axiosResponse) => {
+            console.log('updated Book Data:  ', axiosResponse.data);
+
+
+            const updatedBookArr = this.state.books.map(book => {
+
+                if (book._id === bookId) {
+                    book.title = axiosResponse.data.title;
+                    book.description = axiosResponse.data.description;
+                    book.status = axiosResponse.data.status;
+                    book.img_url = axiosResponse.data.img_url;
+
+                    return book;
+                }
+                return book;
+
             });
-        }).catch(error => alert(error))
-    }
+            this.setState({ books: updatedBookArr })
+            this.handelUpdatedModal({})
+            this.setState({ showUpdateModal: false });
+
+
+        }).catch(error => alert(error));
+    });
+
 
     render() {
         return (
             <div>
                 <>
-                    <Button variant="secondary" onClick={() => this.handleDisplayModal()}>Add a book</Button>
-                    <FormModal
-                        show={this.state.displayAddModal}
-                        handleDisplayModal={this.handleDisplayModal}
-                        handleSubmitForm={this.handleAddBookForm}
-                    />
-                    < Carousel >
+                    <Button variant="secondary" onClick={() => this.handelDisplayModal()}>Add a Book</Button>
 
-                        {this.state.numberOfBooks > 0 &&
-                            this.state.booksData.map((value, i) =>
-                                <Carousel.Item>
+                    <BookFormModal
+                        show={this.state.displayAddModal}
+                        handelDisplayModal={this.handelDisplayModal}
+                        addBook={this.addBook}
+                    />
+
+                    {this.state.showUpdateModal &&
+                        <UpdatedBook
+                            show={this.state.showUpdateModal}
+                            close={this.handelUpdatedModal}
+                            UpdateBook={this.UpdateBook}
+                            updateBookObj={this.state.updateBookObj}
+                        />
+                    }
+                    <Carousel>
+                        {this.state.books.length > 0 &&
+                            this.state.books.map((book, id) => (
+                                <Carousel.Item key={id}>
                                     <img
                                         className="d-block w-30"
                                         style={{ height: '500px', width: '350px', marginLeft: "38%" }}
-                                        src={value.img_url}
+                                        src={book.img_url}
                                         alt="Book"
                                     />
-                                    <Carousel.Caption >
-                                        <h3 style={{ fontSize: '18px', backgroundColor: "#333", width: "34%", textAlign: 'center', marginLeft: "34%" }}>{value.title}</h3>
-                                        <p style={{ fontSize: '12px', backgroundColor: "#333", width: "34%", textAlign: 'center', marginLeft: "34%" }}>{value.description}</p>
-                                        <p style={{ fontSize: '12px', backgroundColor: "#333", width: "20%", textAlign: 'center', marginLeft: "34%" }}>{value.status}</p>
-                                        <div key={i}>
-                                            <button onClick={() => this.handleDeleteBook(i)}>Delete</button>
-                                        </div>
+                                    <Carousel.Caption>
+                                        <h3 style={{ fontSize: '18px', backgroundColor: "#333", width: "34%", textAlign: 'center', marginLeft: "34%" }}>{book.title}</h3>
+                                        <p style={{ fontSize: '12px', backgroundColor: "#333", width: "34%", textAlign: 'center', marginLeft: "34%" }}>{book.description}</p>
+                                        <p style={{ fontSize: '12px', backgroundColor: "#333", width: "20%", textAlign: 'center', marginLeft: "34%" }}>{book.status}</p>
+                                        <Button variant="outline-danger" onClick={() => this.deleteBook(book._id)}>Delete Book</Button>
+                                        <Button variant="outline-danger" onClick={() => this.handelUpdatedModal(book)}>Update Book</Button>
                                     </Carousel.Caption>
                                 </Carousel.Item>
-                            )}
-                    </Carousel >
+                            ))}
+                    </Carousel>
                 </>
-            </div >
-        )
+            </div>
+        );
     }
 }
 
